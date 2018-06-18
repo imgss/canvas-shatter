@@ -2,6 +2,7 @@
 let flag = false;
 let maxCol = 0;
 let minRow = 0;
+const TEXT = '😢'
 function init(){
   let canvas = document.querySelector('canvas')
   let ctx = canvas.getContext('2d');
@@ -9,8 +10,8 @@ function init(){
   ctx.fillRect(0,0,400,400);
   ctx.font="100px Georgia";
   ctx.fillStyle="#fff";
-  ctx.fillText('节操', 80,100);
-  maxCol = ctx.measureText('节操').width + 80;
+  ctx.fillText(TEXT, 80,100);
+  maxCol = ctx.measureText(TEXT).width + 80;
   console.log(maxCol)
   requestAnimationFrame(draw.bind(null, ctx));
   // console.log(ctx.getImageData(0,0, 2,2))
