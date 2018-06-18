@@ -17,34 +17,38 @@ function init(){
 }
 
 function draw(c){
-  let imgData = c.getImageData(0,0,400,400);
+  let imgData = c.getImageData(0,0,maxCol,400);
   imgData = zipImgData(imgData.data);
   let p1, p2, p3, p4, i, j;
   let isGetMin = false;
   if(!flag){
     for(i = 0; i < 399; i+=2){// 行
       for(j = 80; j < maxCol; j+=2){// 列
-        p1 = imgData[400*i + j]
-        p2 = imgData[400*i + j + 1]
-        p3 = imgData[400*(i+1) + j]
-        p4 = imgData[400*(i+1) + j + 1]
+        p1 = imgData[maxCol*i + j]
+        p2 = imgData[maxCol*i + j + 1]
+        p3 = imgData[maxCol*(i+1) + j]
+        p4 = imgData[maxCol*(i+1) + j + 1]
         let newData = cvtStatus([p1, p2, p3, p4])
-        newData = newData.reduce((d,i) => [...d,i,i,i,255], [])
-        let newImageData = new ImageData(new Uint8ClampedArray(newData),2,2)
-        c.putImageData(newImageData, j, i)
+        if(newData){
+          newData = newData.reduce((d,i) => [...d,i,i,i,255], [])
+          let newImageData = new ImageData(new Uint8ClampedArray(newData),2,2)
+          c.putImageData(newImageData, j, i)
+        }
       }
     }
   } else {
     for(i = 1; i < 399; i+=2){
       for(j = 81; j < maxCol; j+=2){
-        p1 = imgData[400*i + j]
-        p2 = imgData[400*i + j + 1]
-        p3 = imgData[400*(i+1) + j]
-        p4 = imgData[400*(i+1) + j + 1]
+        p1 = imgData[maxCol*i + j]
+        p2 = imgData[maxCol*i + j + 1]
+        p3 = imgData[maxCol*(i+1) + j]
+        p4 = imgData[maxCol*(i+1) + j + 1]
         let newData = cvtStatus([p1, p2, p3, p4])
-        newData = newData.reduce((d,i) => [...d,i,i,i,255], [])
-        let newImageData = new ImageData(new Uint8ClampedArray(newData),2,2)
-        c.putImageData(newImageData, j, i)
+        if(newData){
+          newData = newData.reduce((d,i) => [...d,i,i,i,255], [])
+          let newImageData = new ImageData(new Uint8ClampedArray(newData),2,2)
+          c.putImageData(newImageData, j, i)
+        }
       }
     }
   }
@@ -59,10 +63,10 @@ function cvtStatus(state) {
   let status ;
   let [i1, i2, i3, i4] = state;
   if (!i1 && !i2 && !i3 && !i4) {
-    status = [0,0,0,0]
+    return false// 不更新
   }
   else if (i3  && i4) {
-    status = state
+    return false// 不更新
   }
   else if (i1 && i2 && !i3 && i4) {
     status = [0,255,255,255]
