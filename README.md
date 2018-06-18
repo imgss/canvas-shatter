@@ -4,3 +4,6 @@
 
 
 ![img](https://github.com/imgss/canvas-shatter/blob/master/shatter.gif?raw=true)
+
+
+inspared by [智慧从乌合之众中涌现](http://tieba.baidu.com/p/3067870119)
