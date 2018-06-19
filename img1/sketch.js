@@ -23,7 +23,7 @@ function draw(c){
   if(!flag){
     for(i = 0; i < 399; i+=2){// 行
       for(j = 80; j < maxCol; j+=2){// 列
-        let indexs = [maxCol*i + j, maxCol*(i+1) + j, maxCol*i + j + 1, maxCol*(i+1) + j+1]
+        let indexs = [maxCol*i + j, maxCol*i + j + 1, maxCol*(i+1) + j, maxCol*(i+1) + j+1]
         let newData = freshStatus(indexs.map(p => imgData[p]))
         if(newData){
           let newRawData = restoreData(newData, rawImgData,indexs)
@@ -34,7 +34,7 @@ function draw(c){
     }
   } else {
     for(i = 1; i < 399; i+=2){
-      for(j = 81; j < maxCol; j+=2){
+      for(j = 81; j < maxCol+1; j+=2){
         let indexs = [maxCol*i + j, maxCol*(i+1) + j, maxCol*i + j + 1, maxCol*(i+1) + j+1]
         let newData = freshStatus(indexs.map(p => imgData[p]))
         if(newData){
@@ -49,6 +49,7 @@ function draw(c){
   flag = !flag
   requestAnimationFrame(draw.bind(null, c));
 }
+//记录图片在某个位置是黑色还是不是黑色，黑色记为false，其他记为true
 function zipImgData(data){
   let zipData = []
   for(let i = 0, len = data.length; i<=len; i+=4){
@@ -56,6 +57,8 @@ function zipImgData(data){
   }
   return zipData
 }
+
+//根据更新后的状态生成新的图片数据
 function restoreData(data, rawImgData,indexs){
   return data.reduce((d,v) => {
     let rawDataPart;
@@ -67,6 +70,8 @@ function restoreData(data, rawImgData,indexs){
     return [...d, ...rawDataPart]
   }, [])
 }
+
+//更新cell状态
 function freshStatus(state) {
   /**
    * -1表示黑色
