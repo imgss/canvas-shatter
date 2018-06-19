@@ -14,25 +14,20 @@ function init(img){
   ctx.drawImage(img,80,20, 100,100);
   maxCol = 180;
   requestAnimationFrame(draw.bind(null, ctx));
-  // console.log(ctx.getImageData(0,0, 2,2))
 }
 
 function draw(c){
-  let imgData = c.getImageData(0,0,maxCol,400);
-  imgData = zipImgData(imgData.data);
-  let p1, p2, p3, p4, i, j;
-  let isGetMin = false;
+  let rawImgData = c.getImageData(0,0,maxCol,400).data;
+  let imgData = zipImgData(rawImgData);
+  let i, j;
   if(!flag){
     for(i = 0; i < 399; i+=2){// 行
       for(j = 80; j < maxCol; j+=2){// 列
-        p1 = imgData[maxCol*i + j]
-        p2 = imgData[maxCol*i + j + 1]
-        p3 = imgData[maxCol*(i+1) + j]
-        p4 = imgData[maxCol*(i+1) + j + 1]
-        let newData = cvtStatus([p1, p2, p3, p4])
+        let indexs = [maxCol*i + j, maxCol*(i+1) + j, maxCol*i + j + 1, maxCol*(i+1) + j+1]
+        let newData = freshStatus(indexs.map(p => imgData[p]))
         if(newData){
-          newData = newData.reduce((d,i) => [...d,i,i,i,255], [])
-          let newImageData = new ImageData(new Uint8ClampedArray(newData),2,2)
+          let newRawData = restoreData(newData, rawImgData,indexs)
+          let newImageData = new ImageData(new Uint8ClampedArray(newRawData),2,2)
           c.putImageData(newImageData, j, i)
         }
       }
@@ -40,14 +35,11 @@ function draw(c){
   } else {
     for(i = 1; i < 399; i+=2){
       for(j = 81; j < maxCol; j+=2){
-        p1 = imgData[maxCol*i + j]
-        p2 = imgData[maxCol*i + j + 1]
-        p3 = imgData[maxCol*(i+1) + j]
-        p4 = imgData[maxCol*(i+1) + j + 1]
-        let newData = cvtStatus([p1, p2, p3, p4])
+        let indexs = [maxCol*i + j, maxCol*(i+1) + j, maxCol*i + j + 1, maxCol*(i+1) + j+1]
+        let newData = freshStatus(indexs.map(p => imgData[p]))
         if(newData){
-          newData = newData.reduce((d,i) => [...d,i,i,i,255], [])
-          let newImageData = new ImageData(new Uint8ClampedArray(newData),2,2)
+          let newRawData = restoreData(newData, rawImgData,indexs)
+          let newImageData = new ImageData(new Uint8ClampedArray(newRawData),2,2)
           c.putImageData(newImageData, j, i)
         }
       }
@@ -58,9 +50,28 @@ function draw(c){
   requestAnimationFrame(draw.bind(null, c));
 }
 function zipImgData(data){
-  return data.filter((v,index) => index%4 === 0)
+  let zipData = []
+  for(let i = 0, len = data.length; i<=len; i+=4){
+    zipData.push(!(data[i]=== 0 && data[i+1]=== 0 && data[i+2]=== 0))
+  }
+  return zipData
 }
-function cvtStatus(state) {
+function restoreData(data, rawImgData,indexs){
+  return data.reduce((d,v) => {
+    let rawDataPart;
+    if(v === -1){
+      rawDataPart = [0,0,0,255]
+    } else {
+      rawDataPart = rawImgData.subarray((indexs[v]*4),(indexs[v]+1)*4)
+    }
+    return [...d, ...rawDataPart]
+  }, [])
+}
+function freshStatus(state) {
+  /**
+   * -1表示黑色
+   * 其他数字表示改变后的颜色索引所在的位置
+   */
   let status ;
   let [i1, i2, i3, i4] = state;
   if (!i1 && !i2 && !i3 && !i4) {
@@ -70,34 +81,34 @@ function cvtStatus(state) {
     return false// 不更新
   }
   else if (i1 && i2 && !i3 && i4) {
-    status = [0,255,255,255]
+    status = [-1,1,0,3]
   }
   else if (i1 && i2 && i3 && !i4) {
-    status = [255,0,255,255]
+    status = [0,-1,2,1]
   }
   else if (i1 && !i2 && i3 && !i4) {
-    status = [0,0,255,255]
+    status = [-1,-1,0,2]
   }
   else if (!i1 && i2 && !i3 && i4) {
-    status = [0,0,255,255]
+    status = [-1,-1,3,1]
   }
   else if (i1 && i2 && !i3 && !i4) {
     var odd = Math.random();
     if (odd < 0.35) {
-      status = [255,255,0,0]
+      status = [0,1,-1,-1]
     }
     else {
-      status = [0,0,255,255]
+      status = [-1,-1,0,1]
     }
   }
   else if (i1) {
-    status = [0,0,255,0]
+    status = [-1,-1,0,-1]
   }
   else if (i2) {
-    status = [0,0,0,255]
+    status = [-1,-1,-1,1]
   }
   else {
-    status = state
+    return false
   }
   return status
 }

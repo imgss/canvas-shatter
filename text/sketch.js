@@ -13,7 +13,11 @@ function init(){
   ctx.fillText(TEXT, 80,100);
   maxCol = ctx.measureText(TEXT).width + 80;
   console.log(maxCol)
-  requestAnimationFrame(draw.bind(null, ctx));
+  canvas.addEventListener('click',function(){
+    console.log('click')
+    requestAnimationFrame(draw.bind(null, ctx));
+  })
+
   // console.log(ctx.getImageData(0,0, 2,2))
 }
 
@@ -97,8 +101,8 @@ function cvtStatus(state) {
     status = [0,0,0,255]
   }
   else {
-    status = state
+    return false
   }
   return status
 }
-init();
+init()
