@@ -6,7 +6,7 @@ img.src = "./img.jpeg";
 img.onload = function() {
   init(img);
 };
-const EMPTY = [255,255,255,255]
+const EMPTY =  [9,9,9,255]
 const IMG_X = 80
 const IMG_Y = 20
 const IMG_WIDTH = 100
@@ -26,68 +26,55 @@ function init(img) {
 }
 
 function draw() {
-  let rawImgData = ctx.getImageData(0, 0, maxCol, 400).data;
+  let rawImgData = ctx.getImageData(0, 0, maxCol, height + 1).data;
   // statusData 一个由布尔值构成的数组，用于记录当前cell是否为空态
   let statusData = zipImgData(rawImgData);
   let i, j;
   // flag控制遍历的方格排列
   if (!flag) {
-    for (i = IMG_Y; i < 399; i += 2) {
+    for (i = IMG_Y; i < height; i += 2) {
       // 行号为y值
-      for (j = IMG_X; j < maxCol; j += 2) {
-        // 列号为x值
+      for (j = IMG_X - 10; j < maxCol; j += 2) {
+        // 列号为x值, 从图片前10像素就开始遍历，确保图片上所有像素点都能遍历到
         
         /**   cell位置
          *    (j, i)     (j+1, i)
          *    (j, i+1)  (j+1, i+1)
          */
-        let indexs = [
-          maxCol * i + j,
-          maxCol * i + j + 1,
-          maxCol * (i + 1) + j,
-          maxCol * (i + 1) + j + 1
-        ];
-        // 根据原先的状态数据，计算出新的状态数据
-        let prevData = indexs.map(p => statusData[p]);
-        let newData = freshStatus(prevData);
-        if (newData) {
-          let newRawData = restoreData(newData, rawImgData, indexs);
-          let newImageData = new ImageData(
-            new Uint8ClampedArray(newRawData),
-            2,
-            2
-          );
-          ctx.putImageData(newImageData, j, i);
-        }
+        freshState(i, j, rawImgData, statusData)
       }
     }
   } else {
-    for (i = IMG_Y + 1; i < 399; i += 2) {
-      for (j = IMG_X + 1; j < maxCol + 1; j += 2) {
-        // 四个像素点坐标
-        let indexs = [
-          maxCol * i + j,
-          maxCol * (i + 1) + j,
-          maxCol * i + j + 1,
-          maxCol * (i + 1) + j + 1
-        ];
-        let prevData = indexs.map(p => statusData[p]);
-        let newData = freshStatus(prevData);
-        if (newData) {
-          let newRawData = restoreData(newData, rawImgData, indexs);
-          let newImageData = new ImageData(
-            new Uint8ClampedArray(newRawData),
-            2,
-            2
-          );
-          ctx.putImageData(newImageData, j, i);
-        }
+    for (i = IMG_Y + 1; i < height; i += 2) {
+      for (j = IMG_X - 9; j < maxCol + 1; j += 2) {
+        freshState(i, j, rawImgData, statusData)
       }
     }
   }
 
   flag = !flag;
   requestAnimationFrame(draw);
+}
+
+function freshState(i, j, rawImgData, statusData) {
+  let indexs = [
+    maxCol * i + j,
+    maxCol * i + j + 1,
+    maxCol * (i + 1) + j,
+    maxCol * (i + 1) + j + 1
+  ];
+  // 根据原先的状态数据，计算出新的状态数据
+  let prevData = indexs.map(p => statusData[p]);
+  let newData = freshStatus(prevData);
+  if (newData) {
+    let newRawData = restoreData(newData, rawImgData, indexs);
+    let newImageData = new ImageData(
+      new Uint8ClampedArray(newRawData),
+      2,
+      2
+    );
+    ctx.putImageData(newImageData, j, i);
+  }
 }
 //记录图片在某个位置是黑色还是不是黑色，黑色记为false，其他记为true
 function zipImgData(data) {
