@@ -6,10 +6,12 @@ img.src = "./img.jpeg";
 img.onload = function() {
   init(img);
 };
-const EMPTY =  [9,9,9,255]
+const EMPTY =  [255,255,255,255]
 const IMG_X = 80
 const IMG_Y = 20
-const IMG_WIDTH = 100
+const IMG_WIDTH = 52
+
+const odds = []
 
 let canvas = document.querySelector("canvas");
 let ctx = canvas.getContext("2d");
@@ -22,6 +24,11 @@ function init(img) {
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, IMG_X, IMG_Y, IMG_WIDTH, IMG_WIDTH);
   maxCol = IMG_X + IMG_WIDTH;
+  // 画一条线
+  ctx.strokeStyle = `rgba(0,0,0,255)`;
+  ctx.moveTo(0, height);
+  ctx.lineTo(width, height);
+  ctx.stroke();
   requestAnimationFrame(draw);
 }
 
@@ -32,11 +39,10 @@ function draw() {
   let i, j;
   // flag控制遍历的方格排列
   if (!flag) {
-    for (i = IMG_Y; i < height; i += 2) {
+    for (i = IMG_Y; i <= height - 1; i += 2) {
       // 行号为y值
-      for (j = IMG_X - 10; j < maxCol; j += 2) {
+      for (j = IMG_X - 10; j <= maxCol; j += 2) {
         // 列号为x值, 从图片前10像素就开始遍历，确保图片上所有像素点都能遍历到
-        
         /**   cell位置
          *    (j, i)     (j+1, i)
          *    (j, i+1)  (j+1, i+1)
@@ -45,8 +51,8 @@ function draw() {
       }
     }
   } else {
-    for (i = IMG_Y + 1; i < height; i += 2) {
-      for (j = IMG_X - 9; j < maxCol + 1; j += 2) {
+    for (i = IMG_Y + 1; i <= height - 1; i += 2) {
+      for (j = IMG_X - 9; j <= maxCol + 1; j += 2) {
         freshState(i, j, rawImgData, statusData)
       }
     }
@@ -112,6 +118,7 @@ function freshStatus(state) {
     // 都是空 1种情况
     return false; // 不更新
   } else if (i3 && i4) {
+    // [0,0] [0,1] [1,0] [1,1] + [1,1]
     // 3，4不为空 包括4种情况
     return false; // 不更新
   } else if (i1 && i2 && !i3 && i4) {
@@ -126,12 +133,22 @@ function freshStatus(state) {
   } else if (i1 && i2 && !i3 && !i4) {
     var odd = Math.random();
     // 导致整副图像没有整体塌陷的秘诀在这里
+    odds.push(odd)
     if (odd < 0.35) {
       status = [0, 1, -1, -1];
     } else {
       status = [-1, -1, 0, 1];
     }
-  } else if (i1) {
+  } else if (i1 && !i2 && !i3 && i4) {
+    status = [-1, -1, 0, 3];
+  } else if (!i1 && i2 && i3 && !i4) {
+    status = [-1, -1, 2, 1];
+  }else if (i1) {
+    // 用于调试这么判断是不是只有一种情况
+    // let len= [i1, i2, i3, i4].filter(i => i).length
+    // if(len !== 1){
+    //   console.log([i1, i2, i3, i4])
+    // }
     status = [-1, -1, 0, -1];
   } else if (i2) {
     status = [-1, -1, -1, 1];
